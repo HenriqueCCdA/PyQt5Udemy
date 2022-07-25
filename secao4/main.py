@@ -3,6 +3,7 @@ from email.headerregistry import Address
 import os
 import sys
 import sqlite3
+from tkinter import E
 
 from PyQt5.QtGui import QPixmap
 from PyQt5.QtWidgets import *
@@ -25,8 +26,11 @@ class Main(QWidget):
     def UI(self):
         self.mainDesign()
         self.layouts()
+        self.getEmployees()
+        self.displayFirstRecord()
 
     def mainDesign(self):
+        self.setStyleSheet('font-size:14pt;font-family:Arial Bold;')
         self.employeeList = QListWidget()
         self.btnNew = QPushButton('New')
         self.btnNew.clicked.connect(self.addEmployee)
@@ -60,6 +64,32 @@ class Main(QWidget):
         self.newEmployee = AddEmployee()
         self.close()
 
+    def getEmployees(self):
+        query = 'SELECT id, name, surname FROM employees'
+        employees = cur.execute(query).fetchall()
+        for e in employees:
+            self.employeeList.addItem(f'{e[0]} - {e[1]} {e[2]}')
+
+    def displayFirstRecord(self):
+        query = 'SELECT * FROM employees ORDER BY ROWID ASC LIMIT 1'
+        employee = cur.execute(query).fetchone()
+        img = QLabel()
+        img.setPixmap(QPixmap(f'images/{employee[5]}'))
+
+        name = QLabel(employee[1])
+        surname = QLabel(employee[2])
+        phone = QLabel(employee[3])
+        email = QLabel(employee[4])
+        address = QLabel(employee[6])
+
+        self.leftLayout.setVerticalSpacing(20)
+        self.leftLayout.addRow("", img)
+        self.leftLayout.addRow('Name   :', name)
+        self.leftLayout.addRow('Surname:', surname)
+        self.leftLayout.addRow('Phone  :', phone)
+        self.leftLayout.addRow('Email  :', email)
+        self.leftLayout.addRow('address:', address)
+
 
 class AddEmployee(QWidget):
 
@@ -73,6 +103,9 @@ class AddEmployee(QWidget):
     def UI(self):
         self.mainDesign()
         self.layout()
+
+    def closeEvent(self, event):
+        self.main = Main()
 
     def mainDesign(self):
         #################Top Layout widgets#######################################
@@ -133,7 +166,6 @@ class AddEmployee(QWidget):
         self.bottomLayout.addRow(self.nameLbl, self.nameEntry)
         self.bottomLayout.addRow(self.surnameLbl, self.surnameEntry)
         self.bottomLayout.addRow(self.phoneLbl, self.phoneEntry)
-        self.bottomLayout.addRow(self.phoneLbl, self.phoneEntry)
         self.bottomLayout.addRow(self.emailLbl, self.emailEntry)
         self.bottomLayout.addRow(self.imgLbl, self.imgButton)
         self.bottomLayout.addRow(self.addressLbl, self.addressEditor)
@@ -168,10 +200,13 @@ class AddEmployee(QWidget):
                 cur.execute(query, (name, surname, phone, email, img, address))
                 con.commit()
                 QMessageBox.information(self, 'Success', 'Person has been added')
+                self.close()
+                self.main  = Main()
             except:
                 QMessageBox.information(self, 'Warning', 'Person has not been added')
         else:
             QMessageBox.information(self, 'Warning', 'Fields can not been empty')
+
 
 
 def main():
