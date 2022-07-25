@@ -1,3 +1,5 @@
+import email
+from email.headerregistry import Address
 import os
 import sys
 import sqlite3
@@ -106,6 +108,8 @@ class AddEmployee(QWidget):
         self.addButton = QPushButton('Add')
         self.addButton.setStyleSheet('background-color:orange;font-size:10pt')
 
+        self.addButton.clicked.connect(self.addEmployee)
+
     def layout(self):
         #########################Creating main layouts############################
         self.mainLayout = QVBoxLayout()
@@ -138,6 +142,7 @@ class AddEmployee(QWidget):
         ##############setting main layout window##################################
         self.setLayout(self.mainLayout)
 
+
     def uploadImage(self):
         global defaultImg
         size = (128, 128)
@@ -148,6 +153,26 @@ class AddEmployee(QWidget):
             img = Image.open(self.fileName)
             img = img.resize(size)
             img.save(f'images/{defaultImg}')
+
+    def addEmployee(self):
+        global defaultImg
+        name = self.nameEntry.text()
+        surname = self.surnameEntry.text()
+        phone = self.phoneEntry.text()
+        email = self.emailEntry.text()
+        img = defaultImg
+        address = self.addressEditor.toPlainText()
+        if name and surname and phone != "":
+            try:
+                query = 'INSERT INTO employees (name, surname, phone, email, img, address) VALUES (?,?,?,?,?,?)'
+                cur.execute(query, (name, surname, phone, email, img, address))
+                con.commit()
+                QMessageBox.information(self, 'Success', 'Person has been added')
+            except:
+                QMessageBox.information(self, 'Warning', 'Person has not been added')
+        else:
+            QMessageBox.information(self, 'Warning', 'Fields can not been empty')
+
 
 def main():
     APP = QApplication(sys.argv)
