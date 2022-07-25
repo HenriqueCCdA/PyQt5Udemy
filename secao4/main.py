@@ -32,6 +32,7 @@ class Main(QWidget):
     def mainDesign(self):
         self.setStyleSheet('font-size:14pt;font-family:Arial Bold;')
         self.employeeList = QListWidget()
+        self.employeeList.itemClicked.connect(self.singleClick)
         self.btnNew = QPushButton('New')
         self.btnNew.clicked.connect(self.addEmployee)
         self.btnUpdate = QPushButton('Update')
@@ -73,14 +74,33 @@ class Main(QWidget):
     def displayFirstRecord(self):
         query = 'SELECT * FROM employees ORDER BY ROWID ASC LIMIT 1'
         employee = cur.execute(query).fetchone()
-        img = QLabel()
-        img.setPixmap(QPixmap(f'images/{employee[5]}'))
 
-        name = QLabel(employee[1])
-        surname = QLabel(employee[2])
-        phone = QLabel(employee[3])
-        email = QLabel(employee[4])
-        address = QLabel(employee[6])
+        self._displayPerson(employee)
+
+
+    def singleClick(self):
+
+        for i in reversed(range(self.leftLayout.count())):
+            widget = self.leftLayout.takeAt(i).widget()
+
+            if widget is not None:
+                widget.deleteLater()
+
+        employee = self.employeeList.currentItem().text()
+        id = employee.split('-')[0]
+        query = 'SELECT * FROM employees WHERE id=?'
+        person = cur.execute(query, (id, )).fetchone()
+
+        self._displayPerson(person)
+
+    def _displayPerson(self, person):
+        img = QLabel()
+        img.setPixmap(QPixmap(f'images/{person[5]}'))
+        name = QLabel(person[1])
+        surname = QLabel(person[2])
+        phone = QLabel(person[3])
+        email = QLabel(person[4])
+        address = QLabel(person[6])
 
         self.leftLayout.setVerticalSpacing(20)
         self.leftLayout.addRow("", img)
@@ -89,7 +109,6 @@ class Main(QWidget):
         self.leftLayout.addRow('Phone  :', phone)
         self.leftLayout.addRow('Email  :', email)
         self.leftLayout.addRow('address:', address)
-
 
 class AddEmployee(QWidget):
 
